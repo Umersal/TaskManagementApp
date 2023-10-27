@@ -10,7 +10,7 @@ import mysql.connector
 from flask_cors import CORS
 from datetime import datetime, timedelta
 
-
+print("start")
 app = Flask(__name__)
 CORS(app)
 load_dotenv()
@@ -20,6 +20,8 @@ db_user = os.environ.get("USER")
 db_password = os.environ.get("PASSWORD")
 db_port = os.environ.get("PORT")
 db_base = os.environ.get("DATABASE")
+
+print(db_host)
 
 mydb = mysql.connector.connect(
   host=db_host,
