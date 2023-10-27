@@ -4,6 +4,7 @@
 # In[ ]:
 
 import os
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template
 import mysql.connector
 from flask_cors import CORS
@@ -12,6 +13,7 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
+load_dotenv()
 
 db_host = os.getenv("HOST")
 db_user = os.getenv("USER")
