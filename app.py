@@ -13,18 +13,18 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 CORS(app)
 
-host = os.getenv("HOST")
-user = os.getenv("USER")
-password = os.getenv("PASSWORD")
-port = os.getenv("PORT")
-db = os.getenv("DATABASE")
+db_host = os.getenv("HOST")
+db_user = os.getenv("USER")
+db_password = os.getenv("PASSWORD")
+db_port = os.getenv("PORT")
+db_base = os.getenv("DATABASE")
 
 mydb = mysql.connector.connect(
-  host=host,
-  user=user,
-  password=password,
-    port = port,
-    database = db
+  host=db_host,
+  user=db_user,
+  password=db_password,
+    port = db_port,
+    database = db_base
 )
 
 
