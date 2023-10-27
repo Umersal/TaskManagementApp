@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Manager</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #000000;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #333333;
+            color: white;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+
+        select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+        .form-container {
+        display: none;
+            }
+
+            .form-container.active {
+                display: block;
+            }
+
+        button {
+            background-color: #333333;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .tags {
+            color: #555;
+        }
+
+        #task-list-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #update-board-button {
+            background-color: #333333;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        body {
+            background-color: lightgrey;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Task Manager</h1>
+    <button id="open-form-button">Add Task</button>
+
+    <div class="form-container" id="add-task-form">
+        <input type="text" name="task" placeholder="Enter task description..." required>
+        <input type="date" name="due_date" required>
+        <select name="priority"  required>
+            <option value="">Priority</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+        </select>
+        <input type="text" name="tags" placeholder="Enter tags (comma-separated)..." required>
+        <select name="assigned_to" required>
+            <option value="">Assigned To</option>
+            <option value="Rahul">Rahul</option>
+            <option value="Rohit">Rohit</option>
+            <option value="Raghu">Raghu</option>
+        </select>
+        <button type="submit" id="add-task-button">Submit</button>
+        <button id="close-add-task-button">Close</button>
+    </div>
+
+    <div id="success-alert" style="display: none;" class="alert alert-success">
+        Task added successfully!
+    </div>
+
+    <button id="filter-toggle-button">Filter</button>
+    <div id="filter-container" style="display: none;">
+        <select id="filter-dropdown">
+            <option value="alllabels">All Labels</option>
+        </select>
+        <button id="filter-button">Apply</button>
+        <button id="close-filter-button">Close</button>
+    </div>
+
+    <!-- Task List Table -->
+    <div id="task-list-container">
+        <div id="task-list-heading">
+            <h2>Task Board</h2>
+            <button id="update-board-button">Refresh Board</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Task ID</th>
+                    <th>Task description</th>
+                    <th>Due Date</th>
+                    <th>Priority</th>
+                    <th>Tags</th>
+                    <th>Assigned To</th>
+                    <th>Edit</th>
+                    <th>Reassign</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="task-list"></tbody>
+        </table>
+    </div>
+
+    <div id="edit-popup" style="display: none;">
+        <h3>Edit Task</h3>
+        <input type="text" id="edit-task">
+        <input type="date" id="edit-due-date">
+        <select id="edit-priority">
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+        </select>
+        <input type="text" id="edit-tags" placeholder="Enter tags (comma-separated)...">
+        <button id="save-edit-button">Save</button>
+        <button id="close-edit-button">Close</button>
+    </div>
+
+    <div class="reassign-form" id="reassign-form" style="display: none;">
+        <h3>Reassign Task</h3>
+        <p id="reassign-task-name"></p>
+        <span id="reassign-task-name"></span>
+        <label for="reassign-to">Reassign To:</label>
+        <select id="reassign-to">
+            <option value="">None</option>
+            <option value="Rahul">Rahul</option>
+            <option value="Rohit">Rohit</option>
+            <option value="Raghu">Raghu</option>
+            <option value="Umer">Umer</option>
+            <option value="Salman">Salman</option>
+            <!-- Add more options for other names as needed -->
+        </select>
+        <button id="reassign-save-button">Save</button>
+        <button id="close-reassign-button">Close</button>
+    </div>
+
+    <div id="success-alertupdate" class="success-alert" style="display: none;">Task updated successfully!</div>
+    <div id="edit-success-alert" class="success-alert" style="display: none;">Task edited successfully!</div>
+    <div id="reassign-success-alert" class="success-alert" style="display: none;">Task reassigned successfully!</div>
+
+    
+
+    <script>
+        const taskList = document.getElementById('task-list');
+        const addTaskForm = document.getElementById('add-task-form');
+        const addTaskButton = document.getElementById('add-task-button');
+        const openFormButton = document.getElementById('open-form-button');
+        let isFormOpen = false;
+        const editPopup = document.getElementById('edit-popup');
+        const editTaskButton = document.getElementById('edit-task-button');
+        const saveEditButton = document.getElementById('save-edit-button');
+        const editTaskInput = document.getElementById('edit-task');
+        const editDueDateInput = document.getElementById('edit-due-date');
+        const editPriorityInput = document.getElementById('edit-priority');
+        const editTagsInput = document.getElementById('edit-tags');
+        const reassignForm = document.getElementById('reassign-form');
+        const reassignSaveButton = document.getElementById('reassign-save-button');
+        const reassignToDropdown = document.getElementById('reassign-to');
+        const reassignTaskName = document.getElementById('reassign-task-name');
+        const filterDropdown = document.getElementById('filter-dropdown');
+        const filterButton = document.getElementById('filter-button');
+        const filterToggleButton = document.getElementById('filter-toggle-button');
+        const filterContainer = document.getElementById('filter-container');
+        const closeFilterButton = document.getElementById('close-filter-button');
+        const successAlert = document.getElementById('success-alertupdate');
+        const editSuccessAlert = document.getElementById('edit-success-alert');
+        const reassignSuccessAlert = document.getElementById('reassign-success-alert');
+        const updateBoardButton = document.getElementById('update-board-button');
+
+
+        // Function to fetch tasks due in the next 2 days and show notifications
+    function fetchAndShowDueTasks() {
+        fetch('https://taskmanagement-o72l.onrender.com/dueintwodays')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to fetch tasks due in two days.');
+                }
+            })
+            .then(data => {
+                // Loop through the tasks and show notifications
+                data.tasks.forEach(taskData => {
+                    const taskName = taskData.task_name;
+                    const dueDate = new Date(taskData.due_date);
+
+                    // Show a notification for this task
+                    showTaskDueNotification(taskName, dueDate);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+
+    // Function to show a notification
+    function showTaskDueNotification(taskName, dueDate) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            const options = {
+                body: `Task '${taskName}' is due on ${dueDate.toDateString()}`,
+                icon: 'icon.png', 
+            };
+
+            const notification = new Notification('Task Reminder', options);
+        }
+    }
+
+    // Request notification permission when the page loads
+    if ('Notification' in window) {
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    // Permission granted, you can now show notifications
+                    console.log('Notification permission granted.');
+                    fetchAndShowDueTasks();
+                } else {
+                    console.log('Notification permission denied.');
+                }
+            });
+        }
+    }
+
+    //
+    //fetchAndShowDueTasks();
+
+    // can enable it if we want regular updates in the task as a part of notification
+    //setInterval(fetchAndShowDueTasks, 5 * 60 * 1000); // 5 minutes interval
+
+        let editTaskId; // Store the ID of the task being edited
+        let isEditOpen = false; // Track if the edit section is open
+
+        function refreshTaskList() {
+            fetchTasks();
+        }
+
+        updateBoardButton.addEventListener('click', () => {
+            refreshTaskList();
+        });
+
+        openFormButton.addEventListener('click', () => {
+            isFormOpen = !isFormOpen;
+            addTaskForm.classList.toggle('active', isFormOpen);
+        });
+
+        function addTaskRow(taskData) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${taskData.task_id || 'N/A'}</td>
+                <td>${taskData.task_name || 'N/A'}</td>
+                <td>${taskData.due_date || 'N/A'}</td>
+                <td>${taskData.priority || 'N/A'}</td>
+                <td>${taskData.tags || 'N/A'}</td>
+                <td>${taskData.assigned_to || 'N/A'}</td>
+                <td><button class="edit-button">Edit</button></td>
+                <td><button class="reassign-button">Reassign</button></td>
+                <td><button class="delete-button">Delete</button></td> 
+            `;
+            const editButton = row.querySelector('.edit-button');
+            editButton.addEventListener('click', () => {
+                showEditPopup(taskData);
+            });
+            taskList.appendChild(row);
+        }
+
+        function showEditPopup(taskData) {
+            if (isEditOpen) {
+                hideEditPopup();
+            }
+            const dueDate = new Date(taskData.due_date);
+            const formattedDueDate = dueDate.toISOString().split('T')[0];
+            editTaskId = taskData.task_id;
+            editTaskInput.value = taskData.task_name;
+            editDueDateInput.value = formattedDueDate;
+            editPriorityInput.value = taskData.priority;
+            editTagsInput.value = taskData.tags.join(', ');
+            isEditOpen = true;
+            // Change the display property to block
+            editPopup.style.display = 'block';
+        }
+
+        function fetchDistinctLabels() {
+            fetch('https://taskmanagement-o72l.onrender.com/distinctlabels')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to fetch distinct labels.');
+                    }
+                })
+                .then(data => {
+                    // Populate the filter dropdown with distinct labels
+                    filterDropdown.innerHTML = '<option value="">All Labels</option>';
+                    data.labels.forEach(label => {
+                        const option = document.createElement('option');
+                        option.value = label;
+                        option.textContent = label;
+                        filterDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+
+        function filterTasksByLabel(label) {
+            if (label === "") {
+                // If "All Labels" is selected, fetch all tasks
+                fetchTasks();
+            }else{
+                fetch(`https://taskmanagement-o72l.onrender.com/filtertasks/${label}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to filter tasks.');
+                    }
+                })
+                .then(data => {
+                    taskList.innerHTML = ''; // Clear the table
+                    data.tasks.forEach(taskData => {
+                        addTaskRow(taskData);
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+            }
+            
+        }
+
+        function showReassignForm(taskData) {
+            // Show the reassign form
+            reassignForm.style.display = 'block';
+            // Set the task name in the reassign form
+            reassignTaskName.textContent = taskData.task_name;
+            // Store the task ID to use in reassignment
+            reassignTaskId = taskData.task_id;
+        }
+
+        function hideEditFields() {
+                hideEditPopup();
+            }
+
+        document.getElementById('close-edit-button').addEventListener('click', hideEditFields);
+
+        document.getElementById('close-add-task-button').addEventListener('click', () => {
+            // Hide the "Add Task" form
+            const addTaskForm = document.getElementById('add-task-form');
+            addTaskForm.style.display = 'none';
+
+            // Hide the "Close" button
+            const closeAddTaskButton = document.getElementById('close-add-task-button');
+            closeAddTaskButton.style.display = 'none';
+        });
+        function hideEditPopup() {
+            isEditOpen = false;
+            editPopup.style.display = 'none';
+        }
+
+        
+        function hideReassignForm() {
+            reassignForm.style.display = 'none';
+        }
+
+        function hideReassignFields() {
+            hideReassignForm();
+        }
+
+        function showSuccessAlert(alertElement) {
+            alertElement.style.display = 'block';
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 3000); // Hide the alert after 3 seconds
+        }
+
+        document.getElementById('close-reassign-button').addEventListener('click', hideReassignFields);
+
+        function fetchTasks() {
+            fetch('https://taskmanagement-o72l.onrender.com/fetchtasks')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to fetch tasks.');
+                    }
+                })
+                .then(data => {
+                    taskList.innerHTML = ''; // Clear the table
+                    data.tasks.forEach(taskData => {
+                        addTaskRow(taskData);
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+
+        filterToggleButton.addEventListener('click', () => {
+            fetchDistinctLabels();
+            filterContainer.style.display = 'block';
+        });
+
+        closeFilterButton.addEventListener('click', () => {
+            filterContainer.style.display = 'none';
+        });
+
+        function submitTask() {
+            const task_name = addTaskForm.querySelector('input[name="task"]').value;
+            const dueDate = addTaskForm.querySelector('input[name="due_date"]').value;
+            const priority = addTaskForm.querySelector('select[name="priority"]').value;
+            const tags = addTaskForm.querySelector('input[name="tags"]').value.split(',').map(tag => tag.trim());
+            const assignedTo = addTaskForm.querySelector('select[name="assigned_to"]').value;
+
+            const newTask = {
+                task_name,
+                due_date: dueDate,
+                priority,
+                tags,
+                completed: false,
+                assigned_to: assignedTo,
+            };
+
+            fetch('https://taskmanagement-o72l.onrender.com/addtask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newTask),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw Error('Failed to add task.');
+                }
+            })
+            .then(data => {
+                // Add the new task to the table
+                const successAlert = document.getElementById('success-alert');
+                successAlert.style.display = 'block';
+                addTaskRow(data);
+                // Clear the form
+                //addTaskForm.style.display = 'none';
+                //addTaskForm.reset();
+                addTaskForm.querySelectorAll('input, select').forEach(input => {
+                    input.value = ''; // Set the value to an empty string to clear it
+                });
+                isFormOpen = false;
+                setTimeout(() => {
+                    successAlert.style.display = 'none';
+                }, 3000);
+            })
+            .catch(error => {
+                console.error(error);
+            });
+            addTaskForm.classList.remove('active');
+        }
+
+        addTaskButton.addEventListener('click', (event) => {
+            const taskDescription = document.querySelector('input[name="task"]').value;
+            const dueDate = document.querySelector('input[name="due_date"]').value;
+            const priority = document.querySelector('select[name="priority"]').value;
+            const tags = document.querySelector('input[name="tags"]').value;
+            const assignedTo = document.querySelector('select[name="assigned_to"]').value;
+
+            if (!taskDescription || !dueDate || !priority || !tags || !assignedTo) {
+                alert('All fields are required.');
+                event.preventDefault();
+            } else {
+                submitTask();
+            }
+            
+        });
+
+        addTaskForm.querySelectorAll('input, select').forEach(input => {
+            input.value = ''; // Set the value to an empty string to clear it
+        });
+
+        taskList.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('edit-button')) {
+                // Handle the Edit button click
+                // You can implement the edit functionality here
+                console.log('Edit button clicked');
+            }
+        });
+
+        taskList.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('reassign-button')) {
+                // Find the corresponding task data for the reassign action
+                const taskRow = target.closest('tr');
+                const taskData = {
+                    task_id: taskRow.querySelector('td:nth-child(1)').textContent, // Get the task ID
+                    task_name: taskRow.querySelector('td:nth-child(2)').textContent, // Get the task name
+                    assigned_to: taskRow.querySelector('td:nth-child(6)').textContent,
+                };
+
+                // Show the reassign form with the task data
+                showReassignForm(taskData);
+            }
+        });
+
+        function deleteTaskById(taskId) {
+            fetch(`https://taskmanagement-o72l.onrender.com/deletetask/${taskId}`, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw Error('Failed to delete task.');
+                }
+            })
+            .then(data => {
+                // Handle the success response here, if needed
+                console.log('Task deleted:', data);
+
+                // Remove the task from the table (if you want to do it without reloading)
+                const taskRow = taskList.querySelector(`td:contains(${taskId})`).closest('tr');
+                if (taskRow) {
+                    taskRow.remove();
+                }
+            })
+            .catch(error => {
+                console.error(error);
+            });
+        }
+
+        taskList.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('delete-button')) {
+                // Find the corresponding task data for the delete action
+                const taskRow = target.closest('tr');
+                const taskId = taskRow.querySelector('td:nth-child(1)').textContent; // Get the task ID
+
+                if (confirm('Do you want to delete the task?')) {
+                    // User clicked "OK" (yes) in the dialog, so proceed to delete the task
+                    deleteTaskById(taskId);
+                } else {
+                    // User clicked "Cancel" (no) in the dialog, so do nothing
+                }
+            }
+        });
+
+        filterButton.addEventListener('click', () => {
+            const selectedLabel = filterDropdown.value;
+            filterTasksByLabel(selectedLabel);
+        });
+
+        saveEditButton.addEventListener('click', () => {
+            const editedTask = editTaskInput.value;
+            const editedDueDate = editDueDateInput.value;
+            const editedPriority = editPriorityInput.value;
+            const editedTags = editTagsInput.value.split(',').map(tag => tag.trim());
+
+            // Prepare the data to be sent to the server for updating the task
+            const updatedTaskData = {
+                task_name: editedTask,
+                due_date: editedDueDate,
+                priority: editedPriority,
+                tags: editedTags,
+            };
+
+            // Send a 'PUT' request to update the task
+            fetch(`https://taskmanagement-o72l.onrender.com/updatetask/${editTaskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedTaskData),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw Error('Failed to update task.');
+                }
+            })
+            .then(data => {
+                // Update the table row with the new values
+                const rows = taskList.getElementsByTagName('tr');
+                for (let i = 0; i < rows.length; i++) {
+                    const cells = rows[i].getElementsByTagName('td');
+                    if (cells.length > 0 && cells[0].textContent === editTaskId) {
+                        cells[1].textContent = data.task_name;
+                        cells[2].textContent = data.due_date;
+                        cells[3].textContent = data.priority;
+                        cells[4].textContent = data.tags.join(', ');
+                        break; // Exit the loop once updated
+                    }
+                }
+                showSuccessAlert(editSuccessAlert);
+
+                hideEditPopup();
+            })
+            .catch(error => {
+                console.error(error);
+            });
+        });
+
+        reassignSaveButton.addEventListener('click', () => {
+            // Get the selected person to reassign the task
+            const assignedTo = reassignToDropdown.value;
+            // Get the task ID
+            const taskId = reassignTaskId;
+
+            // Prepare data for reassignment
+            const reassignData = {
+                task_name: reassignTaskName.textContent, // Get the task name
+                assigned_to: assignedTo,
+            };
+
+            // Send a 'PUT' request to update the assigned_to field
+            fetch(`https://taskmanagement-o72l.onrender.com/reassigntask/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(reassignData),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw Error('Failed to reassign task.');
+                }
+            })
+            .then(data => {
+                // Handle the success response here, if needed
+                console.log('Task reassigned:', data);
+                // Close the reassign form
+                showSuccessAlert(reassignSuccessAlert);
+                if (Notification.permission === 'granted') {
+                const options = {
+                        body: `Task '${data.task_name}' is assigned to ${data.assigned_to}`,
+                        icon: 'icon.png', // Replace with the path to your notification icon
+                    };
+
+                    const notification = new Notification('Task Reminder', options);
+                }
+                hideReassignForm();
+            })
+            .catch(error => {
+                console.error(error);
+            });
+        });
+        //fetchDistinctLabels();
+        fetchTasks();
+    </script>
+</body>
+</html>
