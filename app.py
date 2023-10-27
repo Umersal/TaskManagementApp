@@ -15,11 +15,11 @@ app = Flask(__name__)
 CORS(app)
 load_dotenv()
 
-db_host = os.getenv("HOST")
-db_user = os.getenv("USER")
-db_password = os.getenv("PASSWORD")
-db_port = os.getenv("PORT")
-db_base = os.getenv("DATABASE")
+db_host = os.environ.get("HOST")
+db_user = os.environ.get("USER")
+db_password = os.environ.get("PASSWORD")
+db_port = os.environ.get("PORT")
+db_base = os.environ.get("DATABASE")
 
 mydb = mysql.connector.connect(
   host=db_host,
