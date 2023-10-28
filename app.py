@@ -10,10 +10,10 @@ import mysql.connector
 from flask_cors import CORS
 from datetime import datetime, timedelta
 
-print("start")
+
 app = Flask(__name__)
 CORS(app)
-load_dotenv()
+
 
 db_host = os.environ.get("HOST")
 db_user = os.environ.get("USER")
@@ -21,7 +21,6 @@ db_password = os.environ.get("PASSWORD")
 db_port = os.environ.get("PORT")
 db_base = os.environ.get("DATABASE")
 
-print(db_host)
 
 mydb = mysql.connector.connect(
   host=db_host,
@@ -39,6 +38,9 @@ def index():
 
 @app.route('/addtask', methods=['GET', 'POST'])
 def addTask():
+    """
+    This function adds the task to the database
+    """
     if request.method == 'POST':
         data = request.get_json()
         print(data)
@@ -71,6 +73,9 @@ def addTask():
 
 @app.route('/fetchtasks', methods=['GET'])
 def getTasks():
+    """
+    function to fetch all the tasks from the database
+    """
     mycursor = mydb.cursor()
     query = "SELECT * FROM tasks"
     mycursor.execute(query)
@@ -94,6 +99,9 @@ def getTasks():
 
 @app.route('/updatetask/<int:task_id>', methods=['PUT'])
 def updateTask(task_id):
+    """
+    function to update the task and store in the database
+    """
     if request.method == 'PUT':
         data = request.get_json()
         task_name = data.get('task_name')
@@ -125,6 +133,9 @@ def updateTask(task_id):
     
 @app.route('/reassigntask/<int:task_id>', methods=['PUT'])
 def reassignTask(task_id):
+    """
+    function to reassign the task and store in the database
+    """
     if request.method == 'PUT':
         data = request.get_json()
         task_name = data.get('task_name')
@@ -149,6 +160,9 @@ def reassignTask(task_id):
     
 @app.route('/distinctlabels', methods=['GET'])
 def distinctLabels():
+    """
+    function to return distinct labels from the database so as to add it as a part of filter
+    """
     mycursor = mydb.cursor()
     query = "SELECT DISTINCT tags FROM tasks"
     mycursor.execute(query)
@@ -159,6 +173,9 @@ def distinctLabels():
 
 @app.route('/filtertasks/<label>', methods=['GET'])
 def filterTasksByLabel(label):
+    """
+    function that returns the filtered task from the database based on labels
+    """
     print(label)
     mycursor = mydb.cursor()
     query = "SELECT * FROM tasks WHERE FIND_IN_SET(%s, tags)"
@@ -184,6 +201,9 @@ def filterTasksByLabel(label):
 
 @app.route('/dueintwodays', methods=['GET'])
 def getTasksDueInTwoDays():
+    """
+    function that returns tasks which are due in next two days so that it can be added as a part of web push notification
+    """
     # Calculate the date 2 days from now
     today = datetime.now()
     two_days_from_now = today + timedelta(days=2)
